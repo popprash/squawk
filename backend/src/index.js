@@ -5,6 +5,7 @@ import {clerkMiddleware} from '@clerk/express'
 import cors from 'cors' 
 import fs from 'fs'
 import path from 'path'
+import clerkWebhook from './webhooks/clerk.webhook.js'
 import job from './lib/cron.js'
 
 
@@ -16,6 +17,8 @@ const PORT = process.env.PORT
 const allowedOrigins = [process.env.FRONTEND_URL]
 
 const publidDir = path.join(process.cwd(),"public")
+
+app.use('/api/webhooks/clerk',express.raw({type:"application/json"}),clerkWebhook)
 
 app.use(express.json())
 app.use(cors({
