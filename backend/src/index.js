@@ -7,7 +7,7 @@ import fs from 'fs'
 import path from 'path'
 import clerkWebhook from './webhooks/clerk.webhook.js'
 import job from './lib/cron.js'
-
+import authRoutes from './routes/auth.route.js'
 
 dotenv.config()
 
@@ -25,10 +25,14 @@ app.use(cors({
     origin: allowedOrigins,
     credentials: true,
 }))
+
 app.use(clerkMiddleware())
+
 app.get('/health',(req, res)=>{
     res.json({message: 'OK'})
 })
+
+app.use('/api/auth',authRoutes)
 
 // if the publidDir exicts we will serve theme as static filese
 if(fs.existsSync(publidDir)){
