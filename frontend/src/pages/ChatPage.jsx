@@ -21,6 +21,7 @@ function ChatPage() {
 
   const activeLightboxMedia = useChatStore((state) => state.activeLightboxMedia);
   const setLightboxMedia = useChatStore((state) => state.setLightboxMedia);
+  const isChatFullscreen = useChatStore((state) => state.isChatFullscreen);
 
   const { activeConversation, activeConversationId, isLargeScreen } = useSelectedConversation();
 
@@ -45,8 +46,19 @@ function ChatPage() {
   }, [getMessages, activeConversationId]);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden p-2 sm:p-3 md:p-8" style={frameStyle}>
-      <div className="mx-auto flex w-full max-w-6xl flex-1 overflow-hidden rounded-2xl border border-border bg-background text-foreground relative">
+    <div
+      className={`flex h-dvh flex-col overflow-hidden transition-[padding] duration-300 ${
+        isChatFullscreen ? "p-0" : "p-2 sm:p-3 md:p-8"
+      }`}
+      style={frameStyle}
+    >
+      <div
+        className={`mx-auto flex w-full flex-1 overflow-hidden bg-background text-foreground relative transition-all duration-300 ${
+          isChatFullscreen
+            ? "max-w-none rounded-none border-none"
+            : "max-w-6xl rounded-2xl border border-border"
+        }`}
+      >
         <ChatSidebar />
 
         <div

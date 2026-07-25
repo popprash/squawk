@@ -1,5 +1,5 @@
 import { Avatar, Button } from "@heroui/react";
-import { ChevronLeftIcon, Volume2Icon, VolumeXIcon, XIcon } from "lucide-react";
+import { ChevronLeftIcon, Volume2Icon, VolumeXIcon, XIcon, Maximize2, Minimize2 } from "lucide-react";
 import { AppLogo } from "../AppLogo";
 import { AvatarWithOnlineIndicator } from "./AvatarWithOnlineIndicator";
 
@@ -15,6 +15,8 @@ export function ChatHeader() {
   const isSoundEnabled = useChatStore((state) => state.isSoundEnabled);
   const setActiveConversationId = useChatStore((state) => state.setActiveConversationId);
   const setSoundEnabled = useChatStore((state) => state.setSoundEnabled);
+  const isChatFullscreen = useChatStore((state) => state.isChatFullscreen);
+  const setChatFullscreen = useChatStore((state) => state.setChatFullscreen);
 
   const { activeConversation, isLargeScreen } = useSelectedConversation();
 
@@ -75,6 +77,21 @@ export function ChatHeader() {
         </div>
 
         <ThemeToggle />
+
+        <Button
+          variant="ghost"
+          size="sm"
+          isIconOnly
+          className="shrink-0"
+          aria-label={isChatFullscreen ? "Minimize chat" : "Maximize chat"}
+          onPress={() => setChatFullscreen(!isChatFullscreen)}
+        >
+          {isChatFullscreen ? (
+            <Minimize2 className="size-5.5" strokeWidth={2} aria-hidden />
+          ) : (
+            <Maximize2 className="size-5.5" strokeWidth={2} aria-hidden />
+          )}
+        </Button>
 
         <Button
           variant="ghost"

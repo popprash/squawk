@@ -22,6 +22,7 @@ export const useChatStore = create(
       isSoundEnabled: true,
       isSendingMedia: false,
       activeLightboxMedia: null,
+      isChatFullscreen: false,
 
       getUsers: async () => {
         set({ isUsersLoading: true });
@@ -135,6 +136,7 @@ export const useChatStore = create(
       setComposerText: (composerText) => set({ composerText }),
       setSoundEnabled: (isSoundEnabled) => set({ isSoundEnabled }),
       setLightboxMedia: (activeLightboxMedia) => set({ activeLightboxMedia }),
+      setChatFullscreen: (isChatFullscreen) => set({ isChatFullscreen }),
 
       sendTextMessage: async (conversationId) => {
         const messageText = get().composerText.trim();

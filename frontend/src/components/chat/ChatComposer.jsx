@@ -1,5 +1,5 @@
 import { Button, TextArea } from "@heroui/react";
-import { ImageIcon, LoaderIcon, SendHorizontalIcon, X } from "lucide-react";
+import { ImageIcon, LoaderIcon, SendHorizontalIcon, X, Plus, Video } from "lucide-react";
 import { useRef, useState } from "react";
 import useKeyboardSound from "../../hooks/useKeyboardSound";
 import { useChatStore } from "../../store/useChatStore";
@@ -18,6 +18,7 @@ export function ChatComposer() {
 
   const [pendingMedia, setPendingMedia] = useState(null);
   const [caption, setCaption] = useState("");
+  const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
 
   const playSoundIfEnabled = () => {
     if (isSoundEnabled) playRandomKeyStrokeSound();
@@ -43,6 +44,14 @@ export function ChatComposer() {
       type: file.type.startsWith("video/") ? "video" : "image",
       previewUrl: URL.createObjectURL(file),
     });
+  };
+
+  const triggerFileSelect = (acceptType) => {
+    setIsAttachmentMenuOpen(false);
+    if (mediaInputRef.current) {
+      mediaInputRef.current.accept = acceptType;
+      mediaInputRef.current.click();
+    }
   };
 
   const handleSendMedia = async () => {
@@ -86,22 +95,57 @@ export function ChatComposer() {
         <input
           ref={mediaInputRef}
           type="file"
-          accept="image/*,video/*"
           className="sr-only"
           disabled={isSendingMedia}
           tabIndex={-1}
           aria-hidden
           onChange={handleMediaPick}
         />
-        <Button
-          variant="ghost"
-          isIconOnly
-          isDisabled={isSendingMedia}
-          className="size-9 shrink-0 touch-manipulation self-end text-accent"
-          onPress={() => mediaInputRef.current?.click()}
-        >
-          <ImageIcon className="size-5 sm:size-6" strokeWidth={2} />
-        </Button>
+
+        <div className="relative flex shrink-0 items-center justify-center self-end">
+          <Button
+            variant="ghost"
+            isIconOnly
+            isDisabled={isSendingMedia}
+            className={`size-9 rounded-full shrink-0 touch-manipulation text-accent transition-transform duration-200 cursor-pointer ${
+              isAttachmentMenuOpen ? "rotate-45" : ""
+            }`}
+            onPress={() => setIsAttachmentMenuOpen(!isAttachmentMenuOpen)}
+          >
+            <Plus className="size-6" strokeWidth={2.5} />
+          </Button>
+
+          {isAttachmentMenuOpen ? (
+            <>
+              {/* Backdrop click listener to close menu */}
+              <div
+                className="fixed inset-0 z-20 cursor-default"
+                onClick={() => setIsAttachmentMenuOpen(false)}
+              />
+
+              {/* Dropdown Menu */}
+              <div className="absolute bottom-11 left-0 z-30 min-w-40 rounded-2xl border border-border bg-surface/95 p-1.5 shadow-2xl backdrop-blur-md flex flex-col gap-0.5 animate-in slide-in-from-bottom-2 duration-200">
+                <button
+                  type="button"
+                  onClick={() => triggerFileSelect("image/*")}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[14px] font-medium text-foreground hover:bg-accent-soft transition-colors cursor-pointer"
+                >
+                  <ImageIcon className="size-4.5 text-accent" strokeWidth={2} />
+                  Upload Photo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => triggerFileSelect("video/*")}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[14px] font-medium text-foreground hover:bg-accent-soft transition-colors cursor-pointer"
+                >
+                  <Video className="size-4.5 text-accent" strokeWidth={2} />
+                  Upload Video
+                </button>
+              </div>
+            </>
+          ) : null}
+        </div>
+
         <TextArea
           fullWidth
           variant="secondary"
