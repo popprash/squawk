@@ -7,7 +7,16 @@ import {BrowserRouter} from 'react-router';
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        layout: {
+          unsafe_disableDevelopmentModeWarnings: true,
+        },
+        elements: {
+          footer: "hidden"
+        }
+      }}
+    >
       <BrowserRouter>
         <App />
       </BrowserRouter>
