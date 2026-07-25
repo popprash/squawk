@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import { uploadChatMedia, hasImageKitConfig } from "../lib/imageKit.js";
+import { getReceiverSocketId } from "../lib/socket.io.js";
 
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -115,11 +116,10 @@ export const sendMessage = async(req, res)=> {
 
     await newMessage.save();
 
-    // TODO: implement Socket.IO for real-time messaging
-    // const receiverSocketId = getReceiverSocketId(receiverId);
-    // if (receiverSocketId) {
-    //   io.to(receiverSocketId).emit("newMessage", newMessage);
-    // }
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
 
     res.status(201).json(newMessage);
   } catch (error) {
