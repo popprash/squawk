@@ -8,6 +8,7 @@ import path from 'path'
 import clerkWebhook from './webhooks/clerk.webhook.js'
 import job from './lib/cron.js'
 import authRoutes from './routes/auth.route.js'
+import messageRoutes from './routes/message.route.js'
 
 dotenv.config()
 
@@ -33,8 +34,9 @@ app.get('/health',(req, res)=>{
 })
 
 app.use('/api/auth',authRoutes)
+app.use('/api/messages',messageRoutes)
 
-// if the publidDir exicts we will serve theme as static filese
+
 if(fs.existsSync(publidDir)){
     app.use(express.static(publidDir))
     app.get('/{*any}',(req, res, next)=>{

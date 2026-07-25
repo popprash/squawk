@@ -1,9 +1,9 @@
 import express from 'express'
 import { checkAuth } from '../controllers/auth.controller.js'
-import { ProtectedRoute } from '../middlewares/auth.middleware.js'
+import { protectRoute } from '../middlewares/auth.middleware.js'
 
 const router = express.Router()
 
-router.get('/check',ProtectedRoute,checkAuth)
+router.get('/check',protectRoute,checkAuth)
 
 export default router;
