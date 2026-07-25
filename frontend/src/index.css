@@ -55,3 +55,12 @@
     transform: translateX(100%);
   }
 }
+
+/* Hide Clerk Development mode watermark and footer globally */
+.cl-userButtonPopoverFooter,
+.cl-footer,
+.cl-internal-180g7wz,
+.cl-internal-b3sq62,
+.cl-internal-1pybe2m {
+  display: none !important;
+}

@@ -79,6 +79,7 @@ function ChatSidebar() {
             appearance={{
               elements: {
                 avatarBox: "size-8",
+                userButtonPopoverFooter: "hidden",
               },
             }}
           />

@@ -13,7 +13,8 @@ createRoot(document.getElementById("root")).render(
           unsafe_disableDevelopmentModeWarnings: true,
         },
         elements: {
-          footer: "hidden"
+          footer: "hidden",
+          userButtonPopoverFooter: "hidden"
         }
       }}
     >
