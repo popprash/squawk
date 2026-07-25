@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express from 'express'
 import http from 'node:http'
 import {Server} from 'socket.io'
@@ -15,10 +16,11 @@ const io = new Server(server, {
 })
 
 function getReceiverSocketId(userId){
-    return userSocketMap[userId]
+    // Return the userId (room name) if the user is online, otherwise null
+    return userSocketMap[userId] ? userId : null;
 }
 
-const userSocketMap = {};
+const userSocketMap = {}; // Maps userId -> Set of socket.ids
 
 io.on("connection",(socket)=> {
     console.log("user connected: ", socket.id)
@@ -26,17 +28,27 @@ io.on("connection",(socket)=> {
     const userId = socket.handshake.query.userId;
     
     if(userId){
-        userSocketMap[userId] = socket.id
+        // Join the room named after the userId to support multi-tab/multi-device messaging
+        socket.join(userId);
+
+        if (!userSocketMap[userId]) {
+            userSocketMap[userId] = new Set();
+        }
+        userSocketMap[userId].add(socket.id);
     }
 
     //io.emit() --> helps in broadcasting
     io.emit("getOnlineUsers", Object.keys(userSocketMap))
 
     socket.on("disconnect", ()=> {
-        if(userId){
-            delete userSocketMap[userId]
-            io.emit("getOnlineUsers", Object.keys(userSocketMap))
+        console.log("user disconnected: ", socket.id)
+        if(userId && userSocketMap[userId]){
+            userSocketMap[userId].delete(socket.id);
+            if (userSocketMap[userId].size === 0) {
+                delete userSocketMap[userId];
+            }
         }
+        io.emit("getOnlineUsers", Object.keys(userSocketMap))
     })
 })
 

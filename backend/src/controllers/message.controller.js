@@ -1,7 +1,7 @@
 import User from "../models/user.model.js";
 import Message from "../models/message.model.js";
 import { uploadChatMedia, hasImageKitConfig } from "../lib/imageKit.js";
-import { getReceiverSocketId } from "../lib/socket.io.js";
+import { getReceiverSocketId, io } from "../lib/socket.io.js";
 
 export const getUsersForSidebar = async (req, res) => {
   try {
@@ -23,16 +23,18 @@ export const getUsersForSidebar = async (req, res) => {
 export const getConversationsForSidebar = async (req, res) => {
   try {
     const loggedInUser = req.user._id;
-    const conversations = Message.aggregate([
-      //keep only the message i have either sent or recieved
+    const conversations = await Message.aggregate([
+      // 1. Keep only the messages the user has either sent or received
       {
         $match: {
           $or: [{ senderId: loggedInUser }, { receiverId: loggedInUser }],
         },
       },
+      // 2. Sort by createdAt desc so that the first message per group is the latest
+      { $sort: { createdAt: -1 } },
+      // 3. Group by the conversation partner
       {
         $group: {
-          // The partner is the other person on the message (not me).
           _id: {
             $cond: [
               { $eq: ["$senderId", loggedInUser] },
@@ -40,12 +42,10 @@ export const getConversationsForSidebar = async (req, res) => {
               "$senderId",
             ],
           },
-          lastMessageAt: { $max: "$createdAt" },
+          lastMessage: { $first: "$$ROOT" },
         },
       },
-      // 3. Put the most recent conversation at the top.
-      { $sort: { lastMessageAt: -1 } },
-      // 4. Look up each partner's user profile (comes back as an array).
+      // 4. Look up partner's user profile
       {
         $lookup: {
           from: "users",
@@ -54,16 +54,53 @@ export const getConversationsForSidebar = async (req, res) => {
           as: "user",
         },
       },
-      // 5. Pull that profile out of the array and make it the document.
-      { $replaceRoot: { newRoot: { $first: "$user" } } },
-      // 6. Hide the private clerkId field from the result.
-      { $project: { clerkId: 0 } },
+      { $unwind: "$user" },
+      // 5. Look up unread count from this partner to the logged-in user
+      {
+        $lookup: {
+          from: "messages",
+          let: { partnerId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$senderId", "$$partnerId"] },
+                    { $eq: ["$receiverId", loggedInUser] },
+                    { $eq: ["$isRead", false] }
+                  ]
+                }
+              }
+            },
+            { $count: "count" }
+          ],
+          as: "unreadCountData"
+        }
+      },
+      // 6. Project final structure
+      {
+        $project: {
+          _id: "$user._id",
+          fullName: "$user.fullName",
+          email: "$user.email",
+          profilePic: "$user.profilePic",
+          lastMessageText: "$lastMessage.text",
+          lastMessageImage: "$lastMessage.image",
+          lastMessageVideo: "$lastMessage.video",
+          lastMessageAt: "$lastMessage.createdAt",
+          unreadCount: {
+            $ifNull: [{ $arrayElemAt: ["$unreadCountData.count", 0] }, 0]
+          }
+        }
+      },
+      // 7. Sort conversations by lastMessageAt descending
+      { $sort: { lastMessageAt: -1 } }
     ]);
 
-    return res.status(200).json(conversations)
+    return res.status(200).json(conversations);
   } catch (error) {
-    console.log("Error in message Controller/ getconversations",error.message)
-    return res.status(500).json({message: "internal server error"})
+    console.log("Error in message Controller/ getconversations", error.message);
+    return res.status(500).json({ message: "internal server error" });
   }
 };
 
@@ -72,6 +109,12 @@ export const getMessages = async(req, res)=>{
   try {
     const { id: userToChatId } = req.params;
     const myId = req.user._id;
+
+    // Mark all unread messages from this partner to me as read
+    await Message.updateMany(
+      { senderId: userToChatId, receiverId: myId, isRead: false },
+      { $set: { isRead: true } }
+    );
 
     const messages = await Message.find({
       $or: [
@@ -119,6 +162,12 @@ export const sendMessage = async(req, res)=> {
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
+
+    // Also emit to sender's room so other tabs/devices of the sender are updated in real-time
+    const senderSocketId = getReceiverSocketId(senderId);
+    if (senderSocketId && senderSocketId !== receiverSocketId) {
+      io.to(senderSocketId).emit("newMessage", newMessage);
     }
 
     res.status(201).json(newMessage);
