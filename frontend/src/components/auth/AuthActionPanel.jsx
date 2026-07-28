@@ -65,6 +65,18 @@ export function AuthActionPanel() {
           </Button>
         }
 
+        <div className="mt-4 text-center text-xs text-[#8E8E93] dark:text-[#636366]">
+          Don&apos;t have an account?{" "}
+          <button
+            onClick={() => {
+              clerk.openSignUp({ fallbackRedirectUrl: AFTER_AUTH, forceRedirectUrl: AFTER_AUTH });
+            }}
+            className="cursor-pointer font-semibold text-accent hover:underline focus:outline-none"
+          >
+            Sign up
+          </button>
+        </div>
+
         <div className="mt-8 flex items-center justify-center gap-2 border-t border-black/6 pt-6 text-[11px] text-[#8E8E93] dark:border-white/8 dark:text-[#636366]">
           <ShieldCheckIcon
             className="size-3.5 shrink-0 text-[#34C759] dark:text-[#30D158]"
